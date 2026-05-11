@@ -1,0 +1,27 @@
+{
+  "1": {
+    "url": "/pages/game/01/index",
+    "freezeUrl": "/pages/game/01/freeze/index"
+  },
+  "2": {
+    "url": "/pages/game/mickeyMouse/index"
+  },
+  "3": {
+    "url": "/pages/game/routine/suddenDeath/index"
+  },
+  "4": {
+    "url": "/pages/game/routine/highMark/index"
+  },
+  "5": {
+    "url": "/pages/game/routine/twist/i2"
+  },
+  "6": {
+    "url": "/pages/game/routine/xo/index"
+  },
+  "7": {
+    "url": "/pages/game/routine/practice/index"
+  },
+  "8": {
+    "url": "/pages/game/mixed/minedIndex"
+  }
+}

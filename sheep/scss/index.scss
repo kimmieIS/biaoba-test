@@ -1,0 +1,313 @@
+.uni-flex {
+  display: flex;
+}
+
+.uni-row {
+  flex-direction: row;
+}
+
+.uni-column {
+  flex-direction: column;
+}
+
+.uni-body {
+  height: 100vh;
+}
+
+.uni-h-full {
+  height: 100%;
+}
+
+.uni-space-between {
+  justify-content: space-between;
+}
+
+.uni-space-around {
+  justify-content: space-around;
+}
+
+.uni-justify-content-center {
+  justify-content: center;
+}
+
+.flex-item {
+  padding: 0.5rem;
+}
+
+.mr-10 {
+  margin-right: 10rpx;
+}
+
+.icon-size-40 {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.icon-size-30 {
+  width: 30rpx;
+  height: 30rpx;
+}
+
+.icon-size-35 {
+  width: 35rpx;
+  height: 35rpx;
+}
+
+.uni-circle {
+  border-radius: 50%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  overflow: hidden;
+}
+
+.bg-989898 {
+  background-color: #989898;
+}
+
+.p-5-10 {
+  padding: 5px 10rpx;
+
+}
+
+.pt-10 {
+  padding-top: 10rpx;
+}
+
+.pt-20 {
+  padding-top: 20rpx;
+}
+
+.center {
+  align-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* 隐藏滚动条 (Webkit) */
+::-webkit-scrollbar {
+  display: none;
+  overflow-y: scroll; /* 允许垂直滚动 */
+  scrollbar-width: none; /* 隐藏滚动条 (Firefox) */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.content {
+  overflow-y: auto; /* 启用垂直滚动 */
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.uni-w-full {
+  width: 100%;
+}
+
+.pr-10 {
+  padding-right: 10rpx;
+}
+
+.pl-10 {
+  padding-left: 10rpx;
+}
+
+.pr-20 {
+  padding-right: 20rpx;
+}
+
+.pl-20 {
+  padding-left: 20rpx;
+}
+
+.pr-1rem {
+  padding-right: 1rem;
+}
+
+.pl-1rem {
+  padding-left: 1rem;
+}
+
+.pr-2rem {
+  padding-right: 2rem;
+}
+
+.pl-2rem {
+  padding-left: 2rem;
+}
+
+.pr-3rem {
+  padding-right: 3rem;
+}
+
+.pl-3rem {
+  padding-left: 3rem;
+}
+
+.uni-items-center {
+  align-items: center;
+}
+
+.text_blur {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.space-nowrap {
+  white-space: nowrap;
+}
+
+.mr-20 {
+  margin-right: 20rpx;
+}
+
+.uni-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+}
+
+.uni-img-scale1-5 {
+  transform: scale(1.5);
+  transition: transform 0.3s ease;
+}
+
+.uni-img-scale2 {
+  transform: scale(2);
+  transition: transform 0.3s ease;
+}
+
+.uni-img-scale3 {
+  transform: scale(3);
+  transition: transform 0.3s ease;
+}
+
+.uni-img-scale3-5 {
+  transform: scale(3.5);
+  transition: transform 0.3s ease;
+}
+
+.uni-img-scale4 {
+  transform: scale(4);
+  transition: transform 0.3s ease;
+}
+
+.btn-submit {
+  background-size: cover; /* 背景图片覆盖容器 */
+  background-position: center; /* 居中显示背景 */
+  background-repeat: no-repeat; /* 防止图片重复 */
+  background-color: transparent;
+
+  border-radius: 8rpx;
+  box-sizing: border-box; /* 确保边框被包含在按钮内 */
+  box-shadow: inset 0 0 34rpx 1rpx rgba(137, 87, 255, 0.45);
+  border: 3rpx solid #8856FF;
+  width: 100%;
+  color: white;
+  font-size: 14rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40rpx;
+}
+
+.uni-input, .btn-code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0 20rpx;
+  color: #fff;
+  height: 40rpx;
+  border-radius: 8rpx 8rpx 8rpx 8rpx;
+  border: 1rpx solid rgba(136, 86, 255, 0.4);
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+.btn-submit-text {
+  font-weight: 400;
+  font-size: 16rpx;
+  color: #FFFFFF;
+  line-height: 0;
+  text-stroke: 1px #8856FF;
+  text-align: left;
+  font-style: normal;
+  text-transform: none;
+  -webkit-text-stroke: 1px #8856FF;
+}
+
+.text_yellow {
+  color: #F0C422;
+  text-decoration: none;
+}
+
+.uni-button {
+  width: 90rpx;
+  height: 35rpx;
+  line-height: 35rpx;
+}
+
+.pattern-button {
+  background: transparent !important;
+  color: #FFFFFF !important;
+  transition: all 0.3s ease;
+  font-size: 13rpx !important;
+}
+
+.pattern-active-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(136, 87, 255, 0.14) !important;
+
+  /* 背景模糊 */
+  backdrop-filter: blur(5px); /* 使用 backdrop-filter 来模糊背景 */
+  /* 边框阴影效果（散光） */
+  box-shadow: 0 4px 8px rgba(136, 87, 255, 0.5), 0 0 10px rgba(136, 87, 255, 0.25) !important;
+
+  border-radius: 10rpx;
+  border: 3rpx solid #8857FF !important;
+
+  font-weight: 400 !important;
+  font-size: 13rpx !important;
+  color: #FFFFFF !important;
+  text-align: left !important;
+  font-style: normal !important;
+  text-transform: none !important;
+
+  /* 清晰的文本 */
+  -webkit-text-stroke: 0 #ffffff; /* 文字边框效果，增加清晰度 */
+}
+
+.group-title {
+  font-weight: 400;
+  font-size: 12rpx;
+  color: #FFFFFF;
+  line-height: 0;
+  text-align: left;
+  font-style: normal;
+  text-transform: none;
+  -webkit-text-stroke: 1px #8856FF;
+}
+
+.stroke-text {
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 5px #FFD700;
+}
+
+@font-face {
+  font-family: Regular(字体);
+  src: url('/static/ttf/ANTEB-ALT-BOLD-ITALIC.TTF')
+}
+
+.font-regular {
+  font-family: Regular, serif;
+  font-weight: bold;
+}
+body{
+  overflow: hidden;
+}
