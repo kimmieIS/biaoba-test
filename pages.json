@@ -1,0 +1,31 @@
+{
+  "pages": [
+    {
+      "path": "pages/game/routine/twist/i2",
+      "style": {
+        "navigationBarTitleText": "标靶"
+      }
+    },
+    {
+      "path": "pages/game/routine/twist/DartBoard",
+      "style": {
+        "navigationBarTitleText": "标靶"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "标靶",
+    "navigationBarBackgroundColor": "#170746",
+    "backgroundColor": "#170746",
+    "navigationStyle": "custom",
+    "pageOrientation": "portrait",
+    "app-plus": {
+      "titleNView": false,
+      "bounce": "none"
+    },
+    "rpxCalcMaxDeviceWidth": 2000,
+    "enablePullDownRefresh": false
+  },
+  "uniIdRouter": {}
+}

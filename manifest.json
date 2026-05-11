@@ -1,0 +1,223 @@
+{
+    "name" : "标靶",
+    "appid" : "__UNI__EAA083B",
+    "description" : "标靶APP",
+    "versionName" : "1.0.0",
+    "versionCode" : 1,
+    "transformPx" : false,
+    /* 5+App特有相关 */
+    "app-plus" : {
+        "usingComponents" : true,
+        "nvueStyleCompiler" : "uni-app",
+        "compilerVersion" : 3,
+        "splashscreen" : {
+            "alwaysShowBeforeRender" : false,
+            "waiting" : true,
+            "autoclose" : true,
+            "delay" : 0
+        },
+        /* 模块配置 */
+        "modules" : {
+            "OAuth" : {},
+            "Payment" : {},
+            "Bluetooth" : {},
+            "Camera" : {},
+            "Barcode" : {},
+            "VideoPlayer" : {},
+            "Record" : {},
+            "Orientation" : {}
+        },
+        /* 应用发布信息 */
+        "distribute" : {
+            /* 重力感应、横屏配置 */
+            "distribute" : {
+                "orientation" : [ "landscape-primary", "landscape-secondary" ]
+            },
+            /* android打包配置 */
+            "android" : {
+                "permissions" : [
+                    "<uses-feature android:name=\"android.hardware.camera\"/>",
+                    "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>",
+                    "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_MOCK_LOCATION\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>",
+                    "<uses-permission android:name=\"android.permission.CALL_PHONE\"/>",
+                    "<uses-permission android:name=\"android.permission.CAMERA\"/>",
+                    "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
+                    "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
+                    "<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
+                    "<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
+                    "<uses-permission android:name=\"android.permission.GET_TASKS\"/>",
+                    "<uses-permission android:name=\"android.permission.INTERNET\"/>",
+                    "<uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\"/>",
+                    "<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_CONTACTS\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_LOGS\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_SMS\"/>",
+                    "<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>",
+                    "<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>",
+                    "<uses-permission android:name=\"android.permission.SEND_SMS\"/>",
+                    "<uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\"/>",
+                    "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
+                    "<uses-permission android:name=\"android.permission.WRITE_CONTACTS\"/>",
+                    "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
+                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>",
+                    "<uses-permission android:name=\"android.permission.WRITE_SMS\"/>",
+                    "<uses-permission android:name=\"android.permission.RECEIVE_USER_PRESENT\"/>",
+                    "",
+                    "<uses-permission android:name=\"android.permission.BLUETOOTH\" />",
+                    "<uses-feature",
+                    "    android:glEsVersion=\"0x00020000\"",
+                    "    android:required=\"true\" />",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                ],
+                "minSdkVersion" : 23,
+                "targetSdkVersion" : 33
+            },
+            /* ios打包配置 */
+            "ios" : {
+                "dSYMs" : false,
+                "privacyDescription" : {
+                    "NSCameraUsageDescription" : "线上模式实时视频",
+                    "NSMicrophoneUsageDescription" : "线上模式实时语音"
+                }
+            },
+            /* SDK配置 */
+            "sdkConfigs" : {
+                "ad" : {},
+                "oauth" : {
+                    "apple" : {},
+                    "weixin" : {
+                        "appid" : "wx3baa8109b5db4bde",
+                        "appsecret" : "e0786f673168affb54c8d12bb36e1f29",
+                        "UniversalLinks" : "https://shopro.sheepjs.com/uni-universallinks/__UNI__082C0BA/"
+                    },
+                    "google" : {
+                        "clientid" : "598583747618-cn0eqqg1ih84njgbd930t3jl6p6sgpuh.apps.googleusercontent.com"
+                    }
+                },
+                "payment" : {
+                    "weixin" : {
+                        "__platform__" : [ "ios" ],
+                        "appid" : "wx3baa8109b5db4bde",
+                        "UniversalLinks" : "https://shopro.sheepjs.com/uni-universallinks/__UNI__082C0BA/"
+                    },
+                    "alipay" : {
+                        "__platform__" : [ "ios", "android" ]
+                    }
+                },
+                "share" : {
+                    "weixin" : {
+                        "appid" : "wxae7a0c156da9383b",
+                        "UniversalLinks" : "https://shopro.sheepjs.com/uni-universallinks/__UNI__082C0BA/"
+                    }
+                }
+            },
+            "icons" : {
+                "android" : {
+                    "hdpi" : "",
+                    "xhdpi" : "",
+                    "xxhdpi" : "",
+                    "xxxhdpi" : ""
+                },
+                "ios" : {
+                    "appstore" : "",
+                    "ipad" : {
+                        "app" : "",
+                        "app@2x" : "",
+                        "notification" : "",
+                        "notification@2x" : "",
+                        "proapp@2x" : "",
+                        "settings" : "",
+                        "settings@2x" : "",
+                        "spotlight" : "",
+                        "spotlight@2x" : ""
+                    },
+                    "iphone" : {
+                        "app@2x" : "",
+                        "app@3x" : "",
+                        "notification@2x" : "",
+                        "notification@3x" : "",
+                        "settings@2x" : "",
+                        "settings@3x" : "",
+                        "spotlight@2x" : "",
+                        "spotlight@3x" : ""
+                    }
+                }
+            },
+            "splashscreen" : {
+                "iosStyle" : "storyboard",
+                "ios" : {
+                    "storyboard" : "CustomStoryboard.zip"
+                }
+            }
+        },
+        // 临时注释掉 Zego 插件以解决基座问题
+        "nativePlugins" : {}
+    },
+    // "zego-ZIMUniPlugin" : {
+    //     "__plugin_info__" : {
+    //         "name" : "Zego ZIM 即时通讯 SDK",
+    //         "description" : "Zego ZIM uni-app 原生插件",
+    //         "platforms" : "Android,iOS",
+    //         "url" : "https://ext.dcloud.net.cn/plugin?id=8601",
+    //         "android_package_name" : "uni.UNI7AEE0A1",
+    //         "ios_bundle_id" : "hk.com.funvision",
+    //         "isCloud" : true,
+    //         "bought" : 1,
+    //         "pid" : "8601",
+    //         "parameters" : {}
+    //     }
+    // },
+    // "zego-ZegoExpressUniAppSDK" : {
+    //     "__plugin_info__" : {
+    //         "name" : "ZEGO 即构实时音视频 SDK",
+    //         "description" : "uni-app Zego Express 音视频 SDK 是一款实时的音视频互动服务产品，是即构音视频解决方案在 uni-app 上的SDK，为开发者提供稳定可靠的实时音视频服务。",
+    //         "platforms" : "Android,iOS",
+    //         "url" : "https://ext.dcloud.net.cn/plugin?id=3617",
+    //         "android_package_name" : "uni.UNI7AEE0A1",
+    //         "ios_bundle_id" : "hk.com.funvision",
+    //         "isCloud" : true,
+    //         "bought" : 1,
+    //         "pid" : "3617",
+    //         "parameters" : {}
+    //     }
+    // }
+    /* 快应用特有相关 */
+    "quickapp" : {},
+    /* 小程序特有相关 */
+    "mp-weixin" : {
+        "appid" : "",
+        "setting" : {
+            "urlCheck" : false
+        },
+        "usingComponents" : true
+    },
+    "mp-alipay" : {
+        "usingComponents" : true
+    },
+    "mp-baidu" : {
+        "usingComponents" : true
+    },
+    "mp-toutiao" : {
+        "usingComponents" : true
+    },
+    "uniStatistics" : {
+        "enable" : false
+    },
+    "vueVersion" : "3",
+    "locale" : "zh-Hans",
+    "fallbackLocale" : "zh-Hans"
+}
