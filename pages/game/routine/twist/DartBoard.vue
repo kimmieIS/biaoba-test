@@ -1,12 +1,13 @@
+<!-- DartBoard.vue - 修复版 -->
 <template>
   <view class="container">
     <!-- 添加蓝牙连接按钮 -->
-    <view class="bluetooth-btn" :style="uiPositions.bluetoothButton">
+    <view class="bluetooth-btn" :style="uiPositions?.bluetoothButton || {}">
       <Bluetooth :size="120" color="#1296db" />
     </view>
 
     <!-- 侧边统计与控制面板 -->
-    <view class="counter-panel" :style="uiPositions.scoreDisplay">
+    <view class="counter-panel" :style="uiPositions?.scoreDisplay || {}">
       <view class="remaining">剩余
         <text class="num">{{ remainingCount }}</text>
       </view>
@@ -16,7 +17,7 @@
       </view>
     </view>
 
-    <canvas canvas-id="board" id="board" type="2d" :style="canvasStyle" @touchstart="handleTouch"></canvas>
+    <canvas canvas-id="board" id="board" :style="canvasStyle" @touchstart="handleTouch"></canvas>
     
     <!-- 底部状态提示 -->
     <view class="bottom-status">
@@ -26,7 +27,7 @@
 </template>
 
 <script>
-import { ref, onMounted, nextTick, watch, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import Bluetooth from "@/sheep/components/blue/Bluetooth.vue";
 import bluetooth from "@/sheep/stores/bluetooth";
 import { useResponsive } from "@/composables/useResponsive";
@@ -61,8 +62,8 @@ export default {
     }
   },
   setup(props, { emit }) {
-    const board = ref(null);
-    let ctx = null; // 存储 canvas 上下文
+    let ctx = null;
+    let redrawTimer = null;
 
     // 使用响应式布局
     const {
@@ -79,7 +80,6 @@ export default {
       let change = props.scoreInfo;
       if (change && Object.keys(change).length > 0) {
         console.log('DartBoard 收到新的得分信息：', change);
-        // 物理 NEXT 键（65）
         if (change.isNext === true || change.code === '65') {
           onNext();
           return;
@@ -89,12 +89,12 @@ export default {
     }, { deep: true });
 
     // 响应式常量定义 - 基于响应式配置计算
-    const CS = computed(() => config.value.canvasSize); // 画布宽度
-    const CH = computed(() => config.value.canvasSize); // 画布高度（保持正方形）
-    const cx = computed(() => CS.value / 2); // 水平中心点
-    const cy = computed(() => CH.value / 2); // 垂直中心点
-    const M = computed(() => CS.value * 0.1); // 边缘留白（10%的画布宽度）
-    const R = computed(() => (CS.value / 2) - M.value); // 板面半径
+    const CS = computed(() => config.value?.canvasSize || 300);
+    const CH = computed(() => config.value?.canvasSize || 300);
+    const cx = computed(() => CS.value / 2);
+    const cy = computed(() => CH.value / 2);
+    const M = computed(() => CS.value * 0.1);
+    const R = computed(() => (CS.value / 2) - M.value);
 
     // 各环半径 - 基于响应式半径计算
     const radii = computed(() => ({
@@ -104,7 +104,7 @@ export default {
       triOut: R.value * 0.6,
       bullOut: R.value * 0.12,
       bullIn: R.value * 0.05,
-      glow: R.value * 1.1  // 发光圈半径
+      glow: R.value * 1.1
     }));
 
     // 配色
@@ -118,15 +118,16 @@ export default {
       brn: '#d4aa70',
       drk: '#333333',
       gold: '#ffd700',
-      hl: '#FFFFFF',  // 修改高亮颜色为白色
-      hit: 'rgba(255,255,255,0.8)'  // 新增击中效果的颜色
+      hl: '#FFFFFF',
+      hit: '#9b59b6',
+	  // hit: 'rgba(255,255,255,0.8)'  // 新增击中效果的颜色
     };
 
-    // 靶号从 20 开始顺时针（20 在正上方）
+    // 靶号从 20 开始顺时针
     const nums = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
     const S = 20;
     const step = (2 * Math.PI) / S;
-    const start = (-Math.PI / 2) - (step / 2);  // 调整使20的数字正好在正上方
+    const start = (-Math.PI / 2) - (step / 2);
 
     // 蓝牙相关状态
     const isConnected = ref(false);
@@ -149,18 +150,13 @@ export default {
     const currentIndex = ref(0);
 
     // 测试状态：记录已测试的分区（用于着色）
-    const testedFlags = ref({}); // { '20-DOUBLE': true, 'BULL-INNER': true, ... }
+    const testedFlags = ref({});
     const testedCount = computed(() => currentIndex.value);
     const remainingCount = computed(() => sequenceKeys.value.length - currentIndex.value);
 
-    // 成功反馈：声音 + 轻微震动
+    // 成功反馈
     const feedbackSuccess = () => {
-      // #ifdef APP-PLUS
-      try { plus.device.beep(); } catch (e) {}
-      // #endif
-      if (typeof uni.vibrateShort === 'function') {
-        try { uni.vibrateShort(); } catch (e) {}
-      }
+      try { uni.vibrateShort({ type: 'medium' }); } catch (e) {}
     };
 
     // 根据蓝牙上报信息生成唯一分区键
@@ -169,7 +165,6 @@ export default {
       const score = parseInt(info.originalScore);
       const multiplier = parseInt(info.multiplier) || 1;
       if (score === 21) {
-        // 牛眼：4=内牛眼，5=外牛眼（依据蓝牙协议）
         return multiplier === 4 ? 'BULL-INNER' : 'BULL-OUTER';
       }
       if (multiplier === 3) return `${score}-TRIPLE`;
@@ -205,114 +200,9 @@ export default {
       }
     });
 
-    // NEXT按钮处理 - 进入下一位
-    const onNext = () => {
-      const left = remainingCount.value;
-      if (left === 0) {
-        // 测试完成，进入下一位
-        testedFlags.value = {}; // 清空当前测试记录
-        currentIndex.value = 0; // 重置序列
-        drawBoard();
-        emit('next');
-        uni.showToast({
-          title: '已进入下一位',
-          icon: 'success'
-        });
-      }
-    };
-
-    // 重置按钮处理
-    const resetBoard = () => {
-      uni.showModal({
-        title: '重置测试',
-        content: '确定要清空当前测试记录吗？',
-        success: (res) => {
-          if (res.confirm) {
-            testedFlags.value = {}; // 清空当前测试记录
-            currentIndex.value = 0; // 重置序列
-            drawBoard();
-          }
-        }
-      });
-    };
-
-    onMounted(() => {
-      // 初始化画布
-      nextTick(() => {
-        const query = uni.createSelectorQuery().in(this);
-        query.select('#board')
-          .fields({ node: true, size: true })
-          .exec((res) => {
-            if (res[0]) {
-              try {
-                ctx = uni.createCanvasContext('board', this);
-                console.log('画布上下文初始化成功');
-                drawBoard();
-              } catch (error) {
-                console.error('画布上下文创建失败：', error);
-              }
-            } else {
-              console.error('画布元素未找到');
-            }
-          });
-      });
-
-      // 监听窗口尺寸变化
-      uni.onWindowResize(() => {
-        console.log('窗口尺寸变化，更新响应式配置');
-        updateResponsiveConfig();
-        // 延迟重绘以确保配置更新完成
-        nextTick(() => {
-          if (ctx) {
-            drawBoard();
-          }
-        });
-      });
-    });
-
-    // 处理触摸事件 - 使用响应式坐标映射
-    const handleTouch = (e) => {
-      const touch = e.touches[0];
-      const screenX = touch.x;
-      const screenY = touch.y;
-
-      // 使用响应式坐标映射
-      const mappedCoords = mapTouch(screenX, screenY);
-
-      // 转换为画布中心坐标系
-      const canvasX = mappedCoords.x + cx.value;
-      const canvasY = mappedCoords.y + cy.value;
-
-      launch(canvasX, canvasY);
-    };
-
-    const score = ref('--');
-    const total = ref(0);
-    const round = ref(1);
-    const throwCount = ref(1);
-
-    const state = {
-      total: total,
-      round: round,
-      throw: throwCount,
-      anim: null,
-      trail: [],
-      hls: [],
-      ctx: null
-    };
-
-    // 移除 URLSearchParams，改用页面参数
-    const initGameState = () => {
-      props.gameState = {
-        currentRound: 1,
-        currentDart: 1,
-        maxRounds: 20,
-        totalScore: 0
-      };
-    };
-
     // 绘制发光环
     const drawGlow = () => {
+      if (!ctx) return;
       try {
         const grad = ctx.createCircularGradient(cx.value, cy.value, R.value);
         grad.addColorStop(0, col.glowInner);
@@ -322,8 +212,6 @@ export default {
         ctx.setFillStyle(grad);
         ctx.fill();
       } catch (error) {
-        console.log('渐变创建失败，使用备选方案');
-        // 备选方案：使用纯色
         ctx.beginPath();
         ctx.arc(cx.value, cy.value, R.value, 0, 2 * Math.PI);
         ctx.setFillStyle(col.bg0);
@@ -333,27 +221,26 @@ export default {
 
     // 扇区绘制
     const drawSector = (ir, or, a1, a2, fill) => {
-      try {
-        ctx.beginPath();
-        ctx.arc(cx.value, cy.value, or, a1, a2);
-        ctx.lineTo(cx.value + Math.cos(a2) * ir, cy.value + Math.sin(a2) * ir);
-        ctx.arc(cx.value, cy.value, ir, a2, a1, true);
-        ctx.lineTo(cx.value + Math.cos(a1) * or, cy.value + Math.sin(a1) * or);
-        ctx.setFillStyle(fill);
-        ctx.fill();
-      } catch (error) {
-        console.error('扇区绘制失败:', error);
-      }
+      if (!ctx) return;
+      ctx.beginPath();
+      ctx.arc(cx.value, cy.value, or, a1, a2);
+      ctx.lineTo(cx.value + Math.cos(a2) * ir, cy.value + Math.sin(a2) * ir);
+      ctx.arc(cx.value, cy.value, ir, a2, a1, true);
+      ctx.setFillStyle(fill);
+      ctx.fill();
     };
 
     // 主绘制函数
     const drawBoard = () => {
-      if (!ctx) return;
+      if (!ctx) {
+        console.log('ctx 未初始化');
+        return;
+      }
 
-      // 清除画布
-      ctx.clearRect(0, 0, CS.value, CH.value);
+      const canvasSize = CS.value;
+      if (canvasSize <= 0) return;
 
-      // 绘制发光效果
+      ctx.clearRect(0, 0, canvasSize, canvasSize);
       drawGlow();
 
       // 绘制背景
@@ -368,13 +255,12 @@ export default {
         const a2 = a1 + step;
         const num = nums[i];
 
-        // 预计算分区键
         const keyDouble = `${num}-DOUBLE`;
         const keyTriple = `${num}-TRIPLE`;
         const keySingleOut = `${num}-SINGLE-OUT`;
         const keySingleIn = `${num}-SINGLE-IN`;
 
-        const testedColor = 'rgba(128,0,128,0.85)';
+        const testedColor = col.hit;
 
         // 双倍区
         const colorDouble = testedFlags.value[keyDouble] ? testedColor : (i % 2 ? col.red : col.grn);
@@ -408,7 +294,7 @@ export default {
       // 绘制靶心（根据testedFlags着色）
       const isBullOuterTested = !!testedFlags.value['BULL-OUTER'];
       const isBullInnerTested = !!testedFlags.value['BULL-INNER'];
-      const testedColor = 'rgba(128,0,128,0.85)';
+      const testedColor = col.hit;
 
       ctx.beginPath();
       ctx.arc(cx.value, cy.value, radii.value.bullOut, 0, 2 * Math.PI);
@@ -420,205 +306,244 @@ export default {
       ctx.setFillStyle(isBullInnerTested ? testedColor : col.grn);
       ctx.fill();
 
-      // 调用draw使绘制生效
-      ctx.draw(true);
-	  console.log("99999")
-    };
-
-    const getHit = (x, y) => {
-      const dx = x - cx.value, dy = y - cy.value, r = Math.hypot(dx, dy);
-      if (r <= radii.value.bullIn) return { ring: 'innerBull', score: 50 };
-      if (r <= radii.value.bullOut) return { ring: 'outerBull', score: 25 };
-      let ang = Math.atan2(dy, dx) - start;
-      if (ang < 0) ang += 2 * Math.PI;
-      const idx = Math.floor(ang / step), base = nums[idx];
-      if (r <= radii.value.triIn) return { ring: 'singleIn', score: base, idx };
-      if (r <= radii.value.triOut) return { ring: 'triple', score: base * 3, idx };
-      if (r <= radii.value.dblIn) return { ring: 'singleOut', score: base, idx };
-      if (r <= radii.value.dblOut) return { ring: 'double', score: base * 2, idx };
-      return { ring: 'miss', score: 0 };
-    };
-
-    const drawDart = (x, y) => {
-      const ctx = board.value.getContext('2d');
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.shadowColor = 'rgba(0,0,0,0.3)';
-      ctx.shadowBlur = 6;
-      // 头
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(-12, -6);
-      ctx.lineTo(-12, 6);
-      ctx.closePath();
-      ctx.fillStyle = '#aaa';
-      ctx.fill();
-      // 身
-      ctx.fillStyle = '#666';
-      ctx.fillRect(-12, -3, -36, 6);
-      // 翼
-      ctx.fillStyle = '#dd3333';
-      for (let i = 0; i < 3; i++) {
-        const t = i * 2 * Math.PI / 3 + Math.PI;
-        ctx.beginPath();
-        ctx.moveTo(-48, 0);
-        ctx.lineTo(-48 + 12 * Math.cos(t + 0.3), 12 * Math.sin(t + 0.3));
-        ctx.lineTo(-48 + 12 * Math.cos(t - 0.3), 12 * Math.sin(t - 0.3));
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.restore();
-    };
-
-    const drawEffects = (now) => {
-      // 高亮淡出
-      state.hls = state.hls.filter(h => {
-        let t = (now - h.t0) / h.dur;
-        if (t > 1) return false;
-        const ctx = board.value.getContext('2d');
-        ctx.save();
-        ctx.globalAlpha = (1 - t) * 0.4;
-        ctx.fillStyle = col.hl;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        if (h.ring.startsWith('inner') || h.ring.startsWith('outer')) {
-          const r = h.ring === 'innerBull' ? radii.value.bullIn : radii.value.bullOut;
+      // 高亮当前需要击打的目标区域
+      const currentKey = sequenceKeys.value[currentIndex.value];
+      if (currentKey && !testedFlags.value[currentKey]) {
+        if (currentKey === 'BULL-OUTER') {
           ctx.beginPath();
-          ctx.arc(cx.value, cy.value, r, 0, 2 * Math.PI);
-          if (h.ring === 'outerBull') {
-            ctx.arc(cx.value, cy.value, radii.value.bullIn, 2 * Math.PI, 0, true);
-          }
-          ctx.closePath();
+          ctx.arc(cx.value, cy.value, radii.value.bullOut, 0, 2 * Math.PI);
+          ctx.setFillStyle('rgba(255, 215, 0, 0.3)');
           ctx.fill();
-          ctx.stroke();
-        } else if (h.ring !== 'miss') {
-          const a1 = start + h.idx * step, a2 = a1 + step;
-          let ir, or;
-          switch (h.ring) {
-            case 'double':
-              ir = radii.value.dblIn;
-              or = radii.value.dblOut;
-              break;
-            case 'triple':
-              ir = radii.value.triIn;
-              or = radii.value.triOut;
-              break;
-            case 'singleOut':
-              ir = radii.value.triOut;
-              or = radii.value.dblIn;
-              break;
-            case 'singleIn':
-              ir = radii.value.bullOut;
-              or = radii.value.triIn;
-              break;
-          }
-          drawSector(ir, or, a1, a2, col.hl);
+        } else if (currentKey === 'BULL-INNER') {
           ctx.beginPath();
-          ctx.arc(cx.value, cy.value, or, a1, a2);
-          ctx.arc(cx.value, cy.value, ir, a2, a1, true);
-          ctx.closePath();
-          ctx.stroke();
-        }
-        ctx.restore();
-        return true;
-      });
-      // 尾迹
-      state.trail = state.trail.filter(pt => now - pt.t0 < 400);
-      state.trail.forEach(pt => {
-        const a = 1 - (now - pt.t0) / 400;
-        const ctx = board.value.getContext('2d');
-        ctx.save();
-        ctx.globalAlpha = a * 0.4;
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = '#999';
-        ctx.fill();
-        ctx.restore();
-      });
-    };
-
-    const updateUI = (sc) => {
-      score.value = sc;
-      state.total.value += sc;
-      if (state.throw.value < 3) state.throw.value++;
-      else {
-        state.throw.value = 1;
-        state.round.value++;
-      }
-    };
-
-    const launch = (x, y) => {
-      const hit = getHit(x, y);
-      state.anim = { sx: cx.value, sy: CH.value + 50, tx: x, ty: y, t0: Date.now(), dur: 600, hit };
-    };
-
-    const loop = (now = Date.now()) => {
-      if (!ctx) return; // 确保 ctx 存在
-
-      drawBoard();
-      drawEffects(now);
-
-      if (state.anim) {
-        const t = Math.min((now - state.anim.t0) / state.anim.dur, 1),
-          p = 1 - Math.pow(1 - t, 3),
-          x = state.anim.sx + (state.anim.tx - state.anim.sx) * p,
-          y = state.anim.sy + (state.anim.ty - state.anim.sy) * p;
-        state.trail.push({ x, y, t0: now });
-        drawDart(x, y);
-        if (t >= 1) {
-          state.hls.push({ ...state.anim.hit, t0: now, dur: 600 });
-          updateUI(state.anim.hit.score);
-          state.anim = null;
+          ctx.arc(cx.value, cy.value, radii.value.bullIn, 0, 2 * Math.PI);
+          ctx.setFillStyle('rgba(255, 215, 0, 0.3)');
+          ctx.fill();
+        } else {
+          const parts = currentKey.split('-');
+          const num = parseInt(parts[0]);
+          const sectorIndex = nums.indexOf(num);
+          if (sectorIndex !== -1) {
+            const a1 = start + sectorIndex * step;
+            const a2 = a1 + step;
+            
+            let innerR, outerR;
+            switch (parts[1]) {
+              case 'DOUBLE':
+                innerR = radii.value.dblIn;
+                outerR = radii.value.dblOut;
+                break;
+              case 'TRIPLE':
+                innerR = radii.value.triIn;
+                outerR = radii.value.triOut;
+                break;
+              case 'SINGLE':
+                if (parts[2] === 'OUT') {
+                  innerR = radii.value.triOut;
+                  outerR = radii.value.dblIn;
+                } else {
+                  innerR = radii.value.bullOut;
+                  outerR = radii.value.triIn;
+                }
+                break;
+              default:
+                return;
+            }
+            drawSector(innerR, outerR, a1, a2, 'rgba(255, 215, 0, 0.35)');
+          }
         }
       }
 
-
+      ctx.draw(true);
+      console.log('飞镖盘绘制完成');
     };
 
+    // 延迟重绘
+    const scheduleRedraw = () => {
+      if (redrawTimer) clearTimeout(redrawTimer);
+      redrawTimer = setTimeout(() => {
+        if (ctx) {
+          drawBoard();
+        }
+      }, 16);
+    };
 
-    // 高亮显示击中区域（一次命中即标记为紫色并计数）
+    // 高亮显示击中区域（命中后变紫色）
     const highlightHitArea = (info) => {
       const key = getAreaKeyFromInfo(info);
-      if (!key) return;
+      if (!key) {
+        console.log('无法解析区域键:', info);
+        return;
+      }
 
       const expected = sequenceKeys.value[currentIndex.value];
+      console.log(`命中区域: ${key}, 期望区域: ${expected}`);
+
       if (key !== expected) {
-        // 顺序不对，忽略
+        console.log('顺序不对，忽略');
+        uni.vibrateShort({ type: 'heavy' });
         return;
       }
 
       if (!testedFlags.value[key]) {
-        testedFlags.value[key] = true; // 标记当前步骤完成
-        feedbackSuccess();            // 声音/震动提示
+        testedFlags.value[key] = true;
+        feedbackSuccess();
+        console.log(`标记命中: ${key}，变为紫色`);
       }
-      // 推进到下一目标
+      
       if (currentIndex.value < sequenceKeys.value.length) {
         currentIndex.value += 1;
       }
 
-      // 重新绘制，让已命中分区显示为紫色
-      drawBoard();
+      scheduleRedraw();
     };
 
-    // 监听蓝牙连接状态
-    watch(() => bluetooth().isConnected, (newVal) => {
-      console.log('蓝牙连接状态：', newVal);
+    // 触摸事件处理
+    const handleTouch = (e) => {
+      const touch = e.touches[0];
+      const screenX = touch.x;
+      const screenY = touch.y;
+
+      const mappedCoords = mapTouch(screenX, screenY);
+      const canvasX = mappedCoords.x + cx.value;
+      const canvasY = mappedCoords.y + cy.value;
+
+      const dx = canvasX - cx.value;
+      const dy = canvasY - cy.value;
+      const dist = Math.hypot(dx, dy);
+      const r = radii.value;
+      
+      let key = null;
+      
+      if (dist <= r.bullIn) {
+        key = 'BULL-INNER';
+      } else if (dist <= r.bullOut) {
+        key = 'BULL-OUTER';
+      } else if (dist <= r.dblOut) {
+        let angle = Math.atan2(dy, dx) - start;
+        if (angle < 0) angle += 2 * Math.PI;
+        const idx = Math.floor(angle / step) % S;
+        const num = nums[idx];
+        
+        if (dist <= r.triIn) {
+          key = `${num}-SINGLE-IN`;
+        } else if (dist <= r.triOut) {
+          key = `${num}-TRIPLE`;
+        } else if (dist <= r.dblIn) {
+          key = `${num}-SINGLE-OUT`;
+        } else {
+          key = `${num}-DOUBLE`;
+        }
+      }
+      
+      if (key) {
+        const mockInfo = { originalScore: key.split('-')[0], multiplier: 1, range: 'out' };
+        if (key.includes('DOUBLE')) mockInfo.multiplier = 2;
+        if (key.includes('TRIPLE')) mockInfo.multiplier = 3;
+        if (key.includes('SINGLE-IN')) { mockInfo.multiplier = 1; mockInfo.range = 'in'; }
+        if (key.includes('SINGLE-OUT')) { mockInfo.multiplier = 1; mockInfo.range = 'out'; }
+        if (key === 'BULL-INNER') { mockInfo.originalScore = 21; mockInfo.multiplier = 4; }
+        if (key === 'BULL-OUTER') { mockInfo.originalScore = 21; mockInfo.multiplier = 5; }
+        
+        highlightHitArea(mockInfo);
+      }
+    };
+
+    // NEXT按钮处理
+    const onNext = () => {
+      if (remainingCount.value === 0) {
+        testedFlags.value = {};
+        currentIndex.value = 0;
+        scheduleRedraw();
+        emit('next');
+        uni.showToast({
+          title: '已进入下一位',
+          icon: 'success'
+        });
+      } else {
+        uni.showToast({
+          title: `请先完成剩余 ${remainingCount.value} 项`,
+          icon: 'none'
+        });
+      }
+    };
+
+    // 重置按钮处理
+    const resetBoard = () => {
+      uni.showModal({
+        title: '重置测试',
+        content: '确定要清空当前测试记录吗？',
+        success: (res) => {
+          if (res.confirm) {
+            testedFlags.value = {};
+            currentIndex.value = 0;
+            scheduleRedraw();
+            uni.showToast({ title: '已重置', icon: 'success' });
+          }
+        }
+      });
+    };
+
+    // 初始化画布
+    const initCanvas = () => {
+      // 获取当前组件实例
+      const component = this;
+      
+      // 使用 setTimeout 确保 DOM 已渲染
+      setTimeout(() => {
+        try {
+          ctx = uni.createCanvasContext('board', component);
+          console.log('画布上下文创建成功');
+          
+          // 延迟绘制，确保画布准备就绪
+          setTimeout(() => {
+            drawBoard();
+          }, 200);
+        } catch (error) {
+          console.error('画布上下文创建失败：', error);
+          // 降级方案
+          ctx = uni.createCanvasContext('board');
+          setTimeout(() => {
+            drawBoard();
+          }, 200);
+        }
+      }, 100);
+    };
+
+    // 监听窗口尺寸变化
+    const handleResize = () => {
+      updateResponsiveConfig();
+      setTimeout(() => {
+        if (ctx) {
+          drawBoard();
+        }
+      }, 100);
+    };
+
+    onMounted(() => {
+      nextTick(() => {
+        initCanvas();
+      });
+      uni.onWindowResize(handleResize);
+    });
+
+    onUnmounted(() => {
+      if (redrawTimer) clearTimeout(redrawTimer);
+      uni.offWindowResize(handleResize);
     });
 
     return {
-      board,
-      score,
-      total,
-      round,
-      throwCount,
+      board: null,
+      score: ref(0),
+      total: ref(0),
+      round: ref(1),
+      throwCount: ref(1),
       handleTouch,
       highlightHitArea,
-      // 新增蓝牙相关
       isConnected,
       bluetoothIcon,
       gameState: computed(() => props.gameState),
       totalScore: computed(() => props.totalScore),
-      // 响应式相关
       canvasStyle,
       config,
       viewport,
@@ -643,7 +568,7 @@ export default {
     z-index: 999;
     padding: 20rpx;
 
-:deep(.uni-img) {
+    :deep(.uni-img) {
       width: 120rpx;
       height: 120rpx;
     }

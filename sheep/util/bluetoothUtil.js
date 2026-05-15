@@ -188,6 +188,7 @@ const _onCharacteristicValueChange = (res) => {
 		let resHex = ab2hex(res.value);
 		if (resHex && bluetooth().isGameStart) {
 			console.log('接收到蓝牙数据:', resHex);
+			console.log(JSON.stringify(resHex));
 
 			// 🔧 所有蓝牙数据都传递给游戏页面，由游戏页面进行回合判断
 			// 优先使用handleScore调用回调函数（支持连续相同数据）
